@@ -12,10 +12,13 @@ int main() {
     while(1){
         if (c==k){
             printf("переполнение\n");
-            tmp=w;
+            for (int i=0;i<k;++i)for(int j=0;j<100;++j)tmp[i][j]=w[i][j];
+            for(int i=0;i<k;++i) free(w[i]);
             w=(char**)malloc(k*2*sizeof(char*));
             for(int i=0;i<k*2;++i) w[i]=(char*)malloc(100*sizeof(char));
-            for(int i=0;i<k;++i) w[i]=tmp[i];
+            for (int i=0;i<k;++i)for(int j=0;j<100;++j)w[i][j]=tmp[i][j];
+            for(int i=0;i<k;++i) free(tmp[i]);
+            tmp=(char**)malloc(k*2*sizeof(char*));
             for(int i=0;i<k*2;++i) tmp[i]=(char*)malloc(100*sizeof(char));
             k=c*2;
         }
