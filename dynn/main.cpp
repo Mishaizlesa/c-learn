@@ -2,8 +2,6 @@
 #include <stdlib.h>
 int main() {
     char** w;
-    w=(char**)malloc(2*sizeof(char*));
-    for(int i=0;i<2;++i) w[i]=(char*)malloc(100*sizeof(char));
     int k=2;
     int c=0;
     while(1){
