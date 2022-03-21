@@ -1,5 +1,4 @@
 #include "MyVector.h"
-
 Vector::Vector (int num){
     n = num;
     corr = new double[n];
