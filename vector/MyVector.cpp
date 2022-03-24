@@ -89,6 +89,7 @@ double  Vector::dot(const Vector& v1) {
 double& Vector::operator [](int i) {
     return this->corr[i];
 }
+
 int Vector::size() {
     return this->n;
 }
