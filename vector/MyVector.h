@@ -13,6 +13,7 @@ public:
     Vector& operator=(const Vector& v1);
     Vector operator +(const Vector& v1);
     Vector operator-(const Vector& v1);
+    friend ostream& operator<<(ostream& out,const Vector& v1);
     Vector& operator+=(const Vector& v1);
     Vector& operator-=(const Vector& v1);
     Vector operator*(const double c);
