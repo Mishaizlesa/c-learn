@@ -42,39 +42,39 @@ Vector& Vector::operator=(const Vector& v1) {  // a = a
 }
 Vector Vector::operator +(const Vector& v1) {
     Vector res(v1.n);
-    for (int i = 0; i <= n; ++i) {
+    for (int i = 0; i < n; ++i) {
         res.corr[i] = this->corr[i] + v1.corr[i];
     }
     return res;
 }
 Vector Vector::operator-(const Vector& v1) {
     Vector res(v1.n);
-    for (int i = 0; i <= n; ++i) {
+    for (int i = 0; i < n; ++i) {
         res.corr[i] = this->corr[i] - v1.corr[i];
     }
     return res;
 }
 Vector& Vector::operator+=(const Vector& v1) {
-    for (int i = 0; i <= n; ++i) {
+    for (int i = 0; i < n; ++i) {
         this->corr[i] += v1.corr[i];
     }
     return *this;
 }
 Vector& Vector::operator-=(const Vector& v1) {
-    for (int i = 0; i <= n; ++i) {
+    for (int i = 0; i < n; ++i) {
         this->corr[i] -= v1.corr[i];
     }
     return *this;
 }
 Vector Vector::operator*(const double c) {
     Vector res(n);
-    for (int i = 0; i <= n; ++i) {
+    for (int i = 0; i < n; ++i) {
         res.corr[i] = this->corr[i] * c;
     }
     return res;
 }
 Vector& Vector::operator*=(const double c) {
-    for (int i = 0; i <= n; ++i) {
+    for (int i = 0; i < n; ++i) {
         this->corr[i]*=c;
     }
     return *this;
@@ -89,12 +89,21 @@ double  Vector::dot(const Vector& v1) {
 double& Vector::operator [](int i) {
     return this->corr[i];
 }
-std::ostram& operator <<(ostream& out,const Vector& v1){
+std::ostream& operator <<(std::ostream& out,const Vector& v1){
     for (int i=0;i<v1.n;++i){
-        cout<<v1.corr[i]<<" ";
+        std::cout<<v1.corr[i]<<" ";
     }
     return out;
-}    
+}
+std::istream& operator >>(std::istream& in,const Vector& v1){
+    for (int i=0;i<v1.n;++i){
+        std::cin>>v1.corr[i];
+    }
+    return in;
+}
+double Vector::norm(){
+    return std::sqrt(this->dot(*this));
+}
 int Vector::size() {
     return this->n;
 }
