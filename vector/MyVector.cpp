@@ -89,7 +89,12 @@ double  Vector::dot(const Vector& v1) {
 double& Vector::operator [](int i) {
     return this->corr[i];
 }
-
+std::ostram& operator <<(ostream& out,const Vector& v1){
+    for (int i=0;i<v1.n;++i){
+        cout<<v1.corr[i]<<" ";
+    }
+    return out;
+}    
 int Vector::size() {
     return this->n;
 }
