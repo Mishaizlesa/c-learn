@@ -11,6 +11,7 @@ public:
 	Matrix& operator=(const Matrix& v1);
 	Matrix operator +(const Matrix& v1);
 	Matrix operator-(const Matrix& v1);
+	Matrix operator-();
 	Matrix& operator+=(const Matrix& v1);
 	Matrix& operator-=(const Matrix& v1);
 	Matrix operator*(const double c);
