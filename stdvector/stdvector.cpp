@@ -79,7 +79,7 @@ void stdvector::push_front(int val){
     insert(0, val);
 }
 double stdvector::pop_front(){
-    double tmp=a[0];
+    double tmp=data[0];
     erase(0);
     return tmp;
 }
