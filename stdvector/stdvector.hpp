@@ -17,6 +17,10 @@ public:
     unsigned int get_size();
     double& operator [](int i);
     void push_back(int val);
-    int pop_back();
+    double pop_back();
+    void push_front(int val);
+    double pop_front();
+    void insert(int id,int val);
+    void erase(int id);
     ~stdvector();
 };
