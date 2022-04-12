@@ -95,6 +95,11 @@ std::istream& operator >>(std::istream& in, const Matrix& v1) {
 	}
 	return in;
 }
+Matrix Matrix::operator-() {
+	Matrix tmp(*this);
+	tmp *= -1;
+	return tmp;
+}
 double Matrix::get_track() {
 	if (n != m) return -1e9 + 7;
 	double res = 0;
@@ -119,4 +124,6 @@ int  Matrix::get_rank() {
 Matrix::~Matrix() {
 	delete[]data;
 }
+
+
 
