@@ -54,7 +54,7 @@ void stdvector::push_back(int val) {
     this->data[size] = val;
     size++;
 }
-int stdvector::pop_back(){
+double stdvector::pop_back(){
     size--;
     return data[size];
 }
@@ -78,8 +78,10 @@ void stdvector::insert(int id,int val){
 void stdvector::push_front(int val){
     insert(0, val);
 }
-void stdvector::pop_front(){
+double stdvector::pop_front(){
+    double tmp=a[0];
     erase(0);
+    return tmp;
 }
 stdvector::~stdvector() {
     delete[] data;
