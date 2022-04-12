@@ -58,6 +58,29 @@ int stdvector::pop_back(){
     size--;
     return data[size];
 }
+void stdvector::erase(int id){
+    for(int i=id;i<size-1;++i){
+        std::swap(data[i], data[i+1]);
+    }
+    size--;
+}
+void stdvector::insert(int id,int val){
+    if (capacity < size + 1) {
+        this->set_cap((size + 1) * ch_size);
+    }
+    double tmp=data[id];
+    data[id]=val;
+    for (int i=id+1;i<size+1;++i){
+        std::swap(data[i], tmp);
+    }
+    size++;
+}
+void stdvector::push_front(int val){
+    insert(0, val);
+}
+void stdvector::pop_front(){
+    erase(0);
+}
 stdvector::~stdvector() {
     delete[] data;
 }
