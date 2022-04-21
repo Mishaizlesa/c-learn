@@ -1,0 +1,269 @@
+#include <iostream>
+#include "model.h"
+#include "SFML/Graphics.hpp"
+#include <cmath>
+#include <algorithm>
+int const width=1920;
+
+int const height=1080;
+
+int const depth=255;
+
+sf::Vector3f eye(30,70,400);
+
+sf::Vector3f center(0,0,0);
+
+sf::Vector3f vec_mult(const sf::Vector3f& A,const sf::Vector3f& B);
+
+sf::RenderWindow window(sf::VideoMode(width, height), "sfml");
+
+int* zbuffer=new int[width*height+1];
+sf::Image diffmap;
+
+void normal(sf::Vector3f& A){
+    double l=sqrt(A.x*A.x+A.y*A.y+A.z*A.z);
+    A.x/=l;
+    A.y/=l;
+    A.z/=l;
+}
+
+
+float dot(const sf::Vector3f& a,const sf::Vector3f& b){
+    return a.x*b.x+a.y*b.y+a.z*b.z;
+}
+
+sf::Vector3f m2v(float** m) {
+    return sf::Vector3f(m[0][0]/m[3][0], m[1][0]/m[3][0], m[2][0]/m[3][0]);
+}
+
+float** v2m(sf::Vector3f v) {
+    float** m=new float*[4];
+    for (int i=0;i<4;++i){
+        m[i]=new float[1];
+    }
+    m[0][0] = v.x;
+    m[1][0] = v.y;
+    m[2][0] = v.z;
+    m[3][0] = 1.f;
+    return m;
+}
+
+float**  viewport(int x, int y, int w, int h) {
+    float** m=new float*[4];
+    for (int i=0;i<4;++i){
+        m[i]=new float[4];
+        for (int j=0;j<4;++j){
+            m[i][j]=(j==i);
+        }
+    }
+    m[0][3] = x+w/2.f;
+    m[1][3] = y+h/2.f;
+    m[2][3] = depth/2.f;
+
+    m[0][0] = w/2.f;
+    m[1][1] = h/2.f;
+    m[2][2] = depth/2.f;
+    return m;
+}
+
+float** matr_mult(float** matr1,float** matr2,int n1,int m1,int n2,int m2){
+    float** res=new float*[n1];
+    for (int i=0;i<n1;++i){
+        res[i]=new float[m2];
+    }
+    for (int i=0;i<n1;++i){
+        for (int j=0;j<m2;++j){
+            res[i][j]=0;
+        }
+    }
+    for (int i=0;i<n1;++i){
+        for (int k=0;k<m1;++k){
+            for(int j=0;j<m2;++j){
+                res[i][j]+=matr1[i][k]*matr2[k][j];
+            }
+        }
+    }
+    return res;
+}
+
+float** lookat(sf::Vector3f eye, sf::Vector3f center, sf::Vector3f up) {
+    sf::Vector3f z =eye-center;
+    normal(z);
+    sf::Vector3f x = vec_mult(up,z);
+    normal(x);
+    sf::Vector3f y = vec_mult(z, x);
+    normal(y);
+    float** Minv=new float*[4];
+    for(int i=0;i<4;++i){
+        Minv[i]=new float[4];
+        for(int j=0;j<4;++j) Minv[i][j]=0;
+    }
+    float** tr=new float*[4];
+    for(int i=0;i<4;++i){
+        tr[i]=new float[4];
+        for(int j=0;j<4;++j) tr[i][j]=0;
+    }
+    Minv[0][0]=x.x;Minv[1][0]=y.x;Minv[2][0]=z.x;Minv[0][3] = -center.x;
+    Minv[0][1]=x.y;Minv[1][1]=y.y;Minv[2][1]=z.y;Minv[1][3] = -center.y;
+    Minv[0][2]=x.z;Minv[1][2]=y.z;Minv[2][2]=z.z;Minv[2][3] = -center.z;
+    return Minv;
+}
+
+sf::Vector3f vec_mult(const sf::Vector3f& A,const sf::Vector3f& B){
+    sf::Vector3f norm;
+    norm.x=(A.y*B.z-A.z*B.y);
+    norm.y=(A.z*B.x-A.x*B.z);
+    norm.z=(A.x*B.y-A.y*B.x);
+    return norm;
+}
+
+int cnt=0;
+
+
+sf::Color colors[width*height+1];
+
+void m_triangle(sf::Vector3i t0, sf::Vector3i t1, sf::Vector3i t2,sf::Color col,sf::Vector2i uv0,sf::Vector2i uv1,sf::Vector2i uv2,sf::VertexArray& triangle){
+    //std::cout<<int(col.a)<<" "<<int(col.r)<<"\n";
+    if (t0.y==t1.y && t0.y==t2.y) return; // i dont care about degenerate triangles
+    if (t0.y>t1.y) { std::swap(t0, t1); std::swap(uv0, uv1); }
+    if (t0.y>t2.y) { std::swap(t0, t2); std::swap(uv0, uv2); }
+    if (t1.y>t2.y) { std::swap(t1, t2); std::swap(uv1, uv2); }
+    int total_height = t2.y-t0.y;
+    for (int i=0; i<total_height; i++) {
+        bool second_half = i>t1.y-t0.y || t1.y==t0.y;
+        int segment_height = second_half ? t2.y-t1.y : t1.y-t0.y;
+        float alpha = (float)i/total_height;
+        float beta  = (float)(i-(second_half ? t1.y-t0.y : 0))/segment_height;
+        sf::Vector3f tmp(sf::Vector3f(t2-t0)*alpha);
+        sf::Vector3i A = t0 + sf::Vector3i(tmp);
+        sf::Vector3i B = second_half ? sf::Vector3i(sf::Vector3f(t1) + sf::Vector3f (t2-t1)*beta) : sf::Vector3i(sf::Vector3f(t0) + sf::Vector3f(t1-t0)*beta);
+        sf::Vector2i uvA =sf::Vector2i(sf::Vector2f(uv0) +sf::Vector2f(uv2-uv0)*alpha);
+        sf::Vector2i uvB = second_half ?sf::Vector2i(sf::Vector2f(uv1) + sf::Vector2f (uv2-uv1)*beta) : sf::Vector2i(sf::Vector2f(uv0) + sf::Vector2f(uv1-uv0)*beta);
+        if (A.x>B.x){
+            std::swap(A, B);
+            std::swap(uvA, uvB);
+        }
+        for (int j=A.x; j<=B.x; j++) {
+            float phi = B.x==A.x ? 1. : (float)(j-A.x)/(float)(B.x-A.x);
+            sf::Vector3i P=sf::Vector3i(sf::Vector3f(A)+sf::Vector3f(B-A)*phi);
+            P.x = j; P.y = t0.y+i;
+            sf::Vector2i uvP = sf::Vector2i(sf::Vector2f(uvA)+sf::Vector2f(uvB-uvA)*phi);
+            int idx = P.x+P.y*width;
+            if (zbuffer[idx]<P.z){
+                zbuffer[idx] = P.z;
+                triangle[cnt].position.x=P.x;
+                triangle[cnt].position.y=P.y;
+                colors[cnt]=diffmap.getPixel(uvP.x, uvP.y);
+                //std::cout<<int(colors[cnt].a)<<" "<<int(colors[cnt].r)<<'\n';
+                cnt++;
+            }
+        }
+    }
+}
+
+Model* model=NULL;
+
+int point[3000];
+
+
+sf::Vector3f camera(0,0,7);
+int main(){
+    diffmap.loadFromFile("/Users/mihailkozlov/Downloads/african_head_diffuse.png");
+    int width1=diffmap.getSize().x;
+    int height1=diffmap.getSize().y;
+    float** projection=new float*[4];
+    for (int i=0;i<4;++i){
+        projection[i]=new float[4];
+    }
+    for (int i=0;i<4;++i){
+        for (int j=0;j<4;++j){
+            projection[i][j]=(j==i);
+        }
+    }
+    float** ModelView=lookat(eye, center, sf::Vector3f(0,1,0));
+    float** Viewport=viewport(width/8,height/8, width*3/4, height*3/4);
+    sf::Vector3f vv = eye-center;
+    projection[3][2]=-1.f/Vec3f(vv.x,vv.y,vv.z).norm();
+    float** r=new float*[4];
+    for (int i=0;i<4;++i){
+        r[i]=new float[4];
+    }
+    for (int i=0;i<4;++i){
+        for (int j=0;j<4;++j){
+            r[i][j]=0;
+        }
+    }
+    r=matr_mult(matr_mult(Viewport, projection, 4, 4, 4, 4),ModelView,4,4,4,4);
+    for (int i=0;i<=width*height;i++) zbuffer[i]=INT_MIN;
+    sf::VertexArray triangle(sf::Points,width*height);
+    sf::Clock clock;
+    float lastTime = 0;
+    window.setFramerateLimit(1000);
+    model = new Model("/Users/mihailkozlov/Downloads/african_head.obj");
+    double fi=3.14/2;
+    sf::Vector3f norm[3000];
+    sf::Vector3i screen_coords[3000][3];
+    sf::Vector3f world_coords[3000][3];
+    sf::Vector2i UV[3000][3];
+    float** tmp_v=new float*[4];
+    for(int i=0;i<4;++i){
+        tmp_v[i]=new float[1];
+    }
+    tmp_v[3][0]=1;
+    for (int i=0; i<model->nfaces(); i++) {
+        sf::Color col=sf::Color::Black;
+        std::vector<int> face = model->face(i);
+        for (int j=0; j<3; j++) {
+            sf::Vector3f v = sf::Vector3f(model->vert(face[j]).x,model->vert(face[j]).y,model->vert(face[j]).z);
+            v.y=(1.5-v.y);
+            v.x+=2;
+            tmp_v[0][0]=v.x;
+            tmp_v[1][0]=v.y;
+            tmp_v[2][0]=v.z;
+            float** r2=matr_mult(r, tmp_v, 4, 4, 4, 1);
+            screen_coords[i][j] = sf::Vector3i(r2[0][0]+1500,r2[1][0]+800,r2[2][0]);
+            //std::cout<<screen_coords[i][j].x<<" "<<screen_coords[i][j].y<<"\n";
+            world_coords[i][j]=v;
+            UV[i][j]=sf::Vector2i((model->uv(i, j).x)*width1,(1.f-model->uv(i, j).y)*height1);
+            //std::cout<<UV[i][j].x<<" "<<UV[i][j]
+        }
+        norm[i] = vec_mult (world_coords[i][2]-world_coords[i][0], world_coords[i][1]-world_coords[i][0]);
+        m_triangle(screen_coords[i][0], screen_coords[i][1], screen_coords[i][2], col, UV[i][0], UV[i][1], UV[i][2], triangle);
+        normal(norm[i]);
+        point[i]=cnt;
+    }
+    int N=model->nfaces();
+    while(window.isOpen()){
+        sf::Event event;
+        while (window.pollEvent(event)){
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+        double cc=cos(fi);
+        double cs=sin(fi);
+        for (int i=0; i<N;++i) {
+            sf::Color col=sf::Color::Black;
+            float iden=norm[i].x*cc+norm[i].z*cs;
+            if (iden>0){
+               col.r=iden*255;
+               col.g=iden*255;
+               col.b=iden*255;
+            }
+            float val=std::max(iden,0.f);
+            for (int j=(i?point[i-1]:i);j<point[i];++j){
+                triangle[j].color=sf::Color(colors[j].r*val,colors[j].g*val,colors[j].b*val);
+            }
+        }
+        fi+=0.01;
+        window.clear();
+        window.draw(triangle);
+        window.display();
+        if (cnt%100==0){
+            float currentTime = clock.getElapsedTime().asMilliseconds();
+            float fps = 100000.f / (currentTime - lastTime);
+            lastTime = currentTime;
+            window.setTitle(std::to_string(fps));
+        }
+        cnt++;
+    }
+}
