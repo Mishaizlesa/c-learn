@@ -3,7 +3,7 @@
 using namespace std;
 class Musician {
 public:
-	Musician(string name_ = "", string surname_ = "", string patron_ = "");
+	virtual Musician(string name_ = "", string surname_ = "", string patron_ = "");
 	void take_place();
 	void rehearsal();
 	void play();
@@ -85,4 +85,12 @@ public:
 template <typename T>
 inline string get_spec(T elem) {
 	return typeid(elem).name;
+}
+class Orchestra(){
+private:
+	std::vector<Musician*>arr;
+public:
+	void take_place();
+	void rehearsal();
+	void play();
 }
