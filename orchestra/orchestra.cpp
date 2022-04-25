@@ -150,4 +150,15 @@ void Clarnetist::play() {
 
 }
 
+void Orchestra::rehearsal() {
+	fof(auto v:arr) v->rehearsal;
 
+}
+void Orchestra::play() {
+	fof(auto v:arr) v->play;
+
+}
+void Orchestra::take_place() {
+	fof(auto v:arr) v->take_place;
+
+}
