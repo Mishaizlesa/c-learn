@@ -1,24 +1,27 @@
 #include <string>
+#include <vector>
 #include <iostream>
 using namespace std;
 class Musician {
 public:
-	virtual Musician(string name_ = "", string surname_ = "", string patron_ = "");
-	void take_place();
-	void rehearsal();
-	void play();
+    Musician(string name_ = "", string surname_ = "", string patron_ = "");
+	virtual void take_place();
+	virtual void rehearsal();
+	virtual void play();
+	void print_name();
+	virtual ~Musician();
 protected:
 	string name;
 	string surname;
 	string patron;
 };
-class Conductor: public Musician {
+class Conductor : public Musician {
 public:
 	Conductor(string name_ = "", string surname_ = "", string patron_ = "");
 	void rehearsal();
 	void play();
 };
-class Strings: public Musician {
+class Strings : public Musician {
 public:
 	Strings(string name_ = "", string surname_ = "", string patron_ = "");
 	void rehearsal();
@@ -37,14 +40,14 @@ public:
 	Bowed(string name_ = "", string surname_ = "", string patron_ = "");
 	void rehearsal();
 };
-class Triangle: public Drum {
+class Triangle : public Drum {
 public:
 	Triangle(string name_ = "", string surname_ = "", string patron_ = "");
 	void take_place();
 	void rehearsal();
 	void play();
 };
-class Violinist :public Bowed{
+class Violinist :public Bowed {
 public:
 	Violinist(string name_ = "", string surname_ = "", string patron_ = "");
 	void take_place();
@@ -60,7 +63,7 @@ public:
 };
 class Cellist : public Bowed {
 public:
-	Cellist (string name_ = "", string surname_ = "", string patron_ = "");
+	Cellist(string name_ = "", string surname_ = "", string patron_ = "");
 	void take_place();
 	void rehearsal();
 	void play();
@@ -74,6 +77,7 @@ public:
 	void take_place();
 	void rehearsal();
 	void play();
+	~Flutist();
 };
 class Clarnetist :public Wind {
 public:
@@ -83,14 +87,19 @@ public:
 	void play();
 };
 template <typename T>
-inline string get_spec(T elem) {
-	return typeid(elem).name;
+inline string get_spec(const T& elem) {
+	return typeid(elem).name();
 }
-class Orchestra(){
+class Orchestra {
 private:
 	std::vector<Musician*>arr;
 public:
+	Orchestra(std::vector<Musician*>arr_);
+	Orchestra();
 	void take_place();
 	void rehearsal();
 	void play();
-}
+	void add_mus(string name_ = "", string surname_ = "", string patron_ = "");
+	void add_mus(Musician& t);
+	void count_flutist();
+};
